@@ -1,0 +1,92 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.min.css" rel="stylesheet" />
+	</head>
+
+	<body>
+		<script src="../js/mui.min.js"></script>
+		<!--sdk-->
+		<script src='../js/webim.config.js'></script>
+		<script src='../js/strophe-1.2.8.min.js'></script>
+		<script src='../js/websdk-1.4.13.js'></script>
+		<script type="text/javascript">
+			mui.init();
+
+			mui.plusReady(function() {
+				var url = 'http://192.168.1.110:8080/inquiry/department/topList';
+				mui.get(url, function(data) {
+					var ul = document.getElementById('ulList');
+					for(var i = 0; i < data.length; i++) {
+						var newLi = document.createElement('li');
+						var newA = document.createElement('a');
+						newA.setAttribute('class', 'mui-navigate-right');
+						newA.setAttribute('href', '#');
+						newA.innerHTML = data[i].name;
+						newLi.setAttribute('id', data[i].id);
+						newLi.setAttribute('class', 'mui-table-view-cell mui-collapse');
+						newLi.appendChild(newA);
+						ul.appendChild(newLi);
+					}
+				}, 'json');
+				//预加载chatPage
+				chatPage = mui.preload({
+					url: 'single-chat.html',
+					id: 'singleChat',
+				});
+			});
+		</script>
+
+		<div class="mui-content">
+			<div class="mui-card">
+				<ul id="ulList" class="mui-table-view">
+
+				</ul>
+			</div>
+		</div>
+
+		<script type="text/javascript">
+			mui('.mui-table-view').on('tap', 'li', function() {
+				var deptId = this.getAttribute('id');
+				mui.post('http://192.168.1.110:8080/inquiry/doctor/findListByDeptId', {
+					'deptId': deptId
+				}, function(data) {
+					var li = document.getElementById(deptId);
+					var div = document.createElement('div');
+					li.appendChild(div);
+					div.setAttribute('class', 'mui-collapse-content');
+					for(var i = 0; i < data.length; i++) {
+						var p = document.createElement('p');
+						p.innerHTML = data[i].realname;
+						div.appendChild(p);
+					}
+					mui('.mui-table-view').off('tap', 'li');
+					mui(".mui-collapse-content").on('tap', 'p', function() {
+						var chatname = this.innerHTML;
+						// 登录
+						mui.fire(chatPage, 'chat', {
+							chatname: chatname
+						})
+						
+						mui.openWindow({
+							id: 'singleChat',
+							show: {
+								aniShow: 'pop-in'
+							},
+							waiting: {
+								autoShow: false
+							}
+						});
+
+					});
+				}, 'json');
+
+			});
+		</script>
+	</body>
+
+</html>

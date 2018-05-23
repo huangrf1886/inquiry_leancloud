@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title>Hello MUI</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1,maximum-scale=1,user-scalable=no">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+		<!--标准mui.css-->
+		<link rel="stylesheet" href="../css/mui.min.css">
+		<!--App自定义的css-->
+		<link rel="stylesheet" type="text/css" href="../css/app.css" />
+	</head>
+
+	<body>
+		<div class="mui-content">
+			<div class="mui-card">
+				<ul id="tableView" class="mui-table-view">
+
+				</ul>
+			</div>
+		</div>
+	</body>
+	<script src="../js/mui.min.js"></script>
+	<!--sdk-->
+	<script src="../js/realtime.browser.js"></script>
+	<script src="../js/init.js"></script>
+	<script>
+		mui.init({
+			swipeBack: true //启用右滑关闭功能
+		});
+		
+		mui.plusReady(function(){
+			//预加载chatPage
+			chatPage = mui.preload({
+				url: 'single-chat.html',
+				id: 'singleChat',
+			});
+		});
+		
+		// Jerry 登录
+		realtime.createIMClient('张三').then(function(jerry) {
+			/*			jerry.on('message', function(message, conversation) {
+							console.log('Message received: ' + message.text);
+							alert(message.text);
+						});*/
+			/*
+			 		<li class="mui-table-view-cell">
+						<a class="mui-navigate-right">
+							<span class="mui-badge mui-badge-danger">15</span> Item 1
+						</a>
+					</li>
+
+			  */
+
+			jerry.getQuery().containsMembers(['张三']).find().then(function(conversations) {
+				var tableView = document.getElementById("tableView");
+				// 默认按每个对话的最后更新日期（收到最后一条消息的时间）倒序排列
+				conversations.map(function(conversation) {
+					var newLi = document.createElement('li');
+					var newA = document.createElement('a');
+					var newSpan = document.createElement('span');
+					newA.setAttribute('class', 'mui-navigate-right');
+					newA.setAttribute('href', '#');
+					newA.innerHTML = screen(conversation.members);
+					newA.appendChild(newSpan);
+					newLi.setAttribute('class', 'mui-table-view-cell');
+					newLi.setAttribute('id', conversation.id);
+					newLi.appendChild(newA);
+					tableView.appendChild(newLi);
+					
+					newLi.addEventListener("tap",function(){
+						mui.fire(chatPage, 'chat', {
+							chatname: screen(conversation.members),
+							conversation_id:this.id
+						})
+						
+						mui.openWindow({
+							id: 'singleChat',
+							show: {
+								aniShow: 'pop-in'
+							},
+							waiting: {
+								autoShow: false
+							}
+						});
+					});
+				});
+
+			}).catch(console.error.bind(console));
+		}).catch(console.error);
+		
+		
+		var screen = function(array){
+			for(var i=0;i<array.length;i++){
+				if(!(array[i]==='张三')){
+					return array[i];
+				}
+			}
+		}
+	</script>
+</html>
